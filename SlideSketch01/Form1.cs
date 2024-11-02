@@ -32,10 +32,29 @@ namespace Playground {
       InitializeComponent();
       _types = new Types();
       _settingsPack = new SettingsFile(SettingsExt.SettingsFileName, this);
-      _settings = _settingsPack.Settings;  
+      _settings = _settingsPack.Settings;
       cbAspectRatio.SelectedIndex = 0;
       this.Text = "SlideSketch name a file and click design to continue";
       label4.Text = "";
+      ConfigureSliders();
+      UpdateCbTypeWithItemTypes(); 
+    }
+
+    private void ConfigureSliders() {
+      tbWeight.MouseEnter += Slider_MouseEnter;
+      tbWeight.MouseLeave += Slider_MouseLeave;
+      tbLeft.MouseEnter += Slider_MouseEnter;
+      tbLeft.MouseLeave += Slider_MouseLeave;
+      tbTop.MouseEnter += Slider_MouseEnter;
+      tbTop.MouseLeave += Slider_MouseLeave;
+      tbWidth.MouseEnter += Slider_MouseEnter;
+      tbWidth.MouseLeave += Slider_MouseLeave;
+      tbHeight.MouseEnter += Slider_MouseEnter;
+      tbHeight.MouseLeave += Slider_MouseLeave;
+      AngleATrackBar.MouseEnter += Slider_MouseEnter;
+      AngleATrackBar.MouseLeave += Slider_MouseLeave;
+      AngleBTrackBar.MouseEnter += Slider_MouseEnter;
+      AngleBTrackBar.MouseLeave += Slider_MouseLeave;
     }
     private void Form1_Shown(object sender, EventArgs e) {
       SetSettings();
@@ -112,6 +131,14 @@ namespace Playground {
 
     }
 
+    private void UpdateCbTypeWithItemTypes() {
+      cbType.Items.Clear();
+      foreach (var itemType in Enum.GetValues(typeof(ItemTypeEnum))) {
+        if ((int)itemType >= 2) {
+          cbType.Items.Add(itemType);
+        }
+      }
+    }
     private void AddFileToMRUL(string fileName) {
       if (!_settings.Contains("MRUL")) {
         _settings["MRUL"] = new SettingProperty() { Key = "MRUL", Value = fileName };
@@ -156,9 +183,9 @@ namespace Playground {
       this.Text = "SlideSketch working on " + _fileName;
       AddFileToMRUL(_fileName);
       _filePackage = new FilePackage(_fileName, this);
-      _itemCaster = new ItemCaster(this, treeView1, _filePackage, _types);      
+      _itemCaster = new ItemCaster(this, treeView1, _filePackage, _types);
       _itemCaster.LoadTreeviewItemsAsync(treeView1);
-      treeView1.ExpandAll();      
+      treeView1.ExpandAll();
       DrawTimerRunning = true;
     }
 
@@ -172,12 +199,12 @@ namespace Playground {
     }
 
     private void MenuAddFrame_Click(object sender, EventArgs e) {
-      _ = _itemCaster.SaveNewChildItemsFromText(null, _types[(int)TnType.Frame], "Frame");
+      _ = _itemCaster.SaveNewChildItemsFromText(null, _types[(int)ItemTypeEnum.Frame], "Frame");
     }
 
     private void MenuAddElement_Click(object sender, EventArgs e) {
       if (_inEditItem != null) {
-        _ = _itemCaster.SaveNewChildItemsFromText(_inEditItem, _types[(int)TnType.Element], "Element");
+        _ = _itemCaster.SaveNewChildItemsFromText(_inEditItem, _types[(int)ItemTypeEnum.Element], "Element");
       }
     }
 
@@ -258,13 +285,26 @@ namespace Playground {
       if (item != null) {
         _inReset = true;
         label4.Text = $"Focused: {item.Name}";
+        tbWeight.Value = item.Weight;
         tbLeft.Value = item.Left;
         tbTop.Value = 100 - item.Top;
         tbWidth.Value = item.Width;
         tbHeight.Value = 100 - item.Height;
-        cbType.SelectedIndex = item.TypeId;
+
+        // Find the index of the enum string that matches item.TypeId
+        var typeName = ((ItemTypeEnum)item.TypeId).ToString();
+        var index = cbType.Items.Cast<object>().ToList().FindIndex(x => x.ToString() == typeName);
+        if (index >= 0) {
+          cbType.SelectedIndex = index;
+        } else {
+          // Handle the case where the type is not found
+          cbType.SelectedIndex = -1; // or any other appropriate action
+        }
+
         ColorAButton.BackColor = item.ColorA.AsColor();
         ColorBButton.BackColor = item.ColorB.AsColor();
+        AngleATrackBar.Value = item.AngleA;
+        AngleBTrackBar.Value = item.AngleB;
         edCaption.Text = item.Caption;
         btnFont.Font = item.Font;
         _inReset = false;
@@ -283,10 +323,11 @@ namespace Playground {
     }
 
     private void cbType_SelectedIndexChanged(object sender, EventArgs e) {
-      if (_inEditItem == null || _inReset) return;
-      int aSelIndex = cbType.SelectedIndex;
-      if (aSelIndex > 1) {
-        _inEditItem.TypeId = aSelIndex;
+      if (_inEditItem == null || _inReset || cbType.SelectedItem == null) return;
+      string selectedType = cbType.SelectedItem?.ToString() ?? string.Empty;
+      int selectedIndex = (Enum.TryParse(selectedType, out ItemTypeEnum itemType)) ? (int)itemType : 0;      
+      if (selectedIndex > 1) {
+        _inEditItem.TypeId = selectedIndex;
         SaveInEditChanges();
       }
     }
@@ -340,6 +381,33 @@ namespace Playground {
       SaveInEditChanges();
     }
 
+    private void AngleATrackBar_ValueChanged(object sender, EventArgs e) {
+      if (_inEditItem == null || _inReset) return;
+      _inEditItem.AngleA = AngleATrackBar.Value;
+      SaveInEditChanges();
+    }
+
+    private void AngleBTrackBar_ValueChanged(object sender, EventArgs e) {
+      if (_inEditItem == null || _inReset) return;
+      _inEditItem.AngleB = AngleBTrackBar.Value;
+      SaveInEditChanges();
+    }
+
+    private void tbWeight_ValueChanged(object sender, EventArgs e) {
+      if (_inEditItem == null || _inReset) return;
+      _inEditItem.Weight = tbWeight.Value;
+      SaveInEditChanges();
+    }
+
+    private void btnFont_Click(object sender, EventArgs e) {
+      if (_inEditItem == null) return;
+      fontDialog1.Font = _inEditItem.Font;
+      if (fontDialog1.ShowDialog() == DialogResult.OK) {
+        _inEditItem.Font = fontDialog1.Font;
+        SaveInEditChanges();
+      }
+    }
+
     private void treeView1_AfterLabelEdit(object sender, NodeLabelEditEventArgs e) {
       try {
         if (_inEditItem != (Item)e.Node) {
@@ -356,6 +424,16 @@ namespace Playground {
         //SetInProgress(0);
       }
     }
+
+    private void timerDraw_Tick(object sender, EventArgs e) {
+      timerDraw.Enabled = false;
+      try {
+        DrawTreeOnPictureBox();
+      } finally {
+        timerDraw.Enabled = _drawTimerRunning;
+      }
+    }
+
 
     private Item? FindFrameNode() {
       if (_inEditItem == null) return null;
@@ -421,25 +499,16 @@ namespace Playground {
         bg.Dispose();
         graphics.Dispose();
       }
+    } 
+    private void Slider_MouseEnter(object sender, EventArgs e) {
+      this.Cursor = Cursors.Hand; // Change to slider icon
     }
 
-    private void timerDraw_Tick(object sender, EventArgs e) {
-      timerDraw.Enabled = false;
-      try {
-        DrawTreeOnPictureBox();
-      } finally {
-        timerDraw.Enabled = _drawTimerRunning;
-      }
+    private void Slider_MouseLeave(object sender, EventArgs e) {
+      this.Cursor = Cursors.Default; // Revert to default cursor
     }
 
-    private void btnFont_Click(object sender, EventArgs e) {
-      if (_inEditItem == null ) return;
-      fontDialog1.Font = _inEditItem.Font;
-      if ( fontDialog1.ShowDialog() == DialogResult.OK){
-        btnFont.Font = fontDialog1.Font;
-        _inEditItem.Font = fontDialog1.Font;
-        SaveInEditChanges();
-      }
-    }
+
+
   }
 }

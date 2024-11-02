@@ -15,6 +15,7 @@ namespace Playground.Models {
     private int _Height = 0;
     private int _AngleA = 0;
     private int _AngleB = 0;
+    private int _Weight = 0;
 
     private string _ColorA = "";
     private string _ColorB = "";
@@ -31,17 +32,17 @@ namespace Playground.Models {
         Dirty = true;
         _TypeId = value;
         switch (this.TypeId) {
-          case (int)TnType.Null:
-            this.ImageIndex = (int)Tii.Null;
-            this.SelectedImageIndex = (int)Tii.Null;
+          case (int)ItemTypeEnum.Null:
+            this.ImageIndex = (int)ImageIndexEnum.Null;
+            this.SelectedImageIndex = (int)ImageIndexEnum.Null;
             break;
-          case (int)TnType.Frame:
-            this.ImageIndex = (int)Tii.Frame;
-            this.SelectedImageIndex = (int)Tii.Frame;
+          case (int)ItemTypeEnum.Frame:
+            this.ImageIndex = (int)ImageIndexEnum.Frame;
+            this.SelectedImageIndex = (int)ImageIndexEnum.Frame;
             break;
           default:
-            this.ImageIndex = (int)Tii.Element;
-            this.SelectedImageIndex = (int)Tii.Element;
+            this.ImageIndex = (int)ImageIndexEnum.Element;
+            this.SelectedImageIndex = (int)ImageIndexEnum.Element;
             break;          
         }
       }
@@ -53,6 +54,7 @@ namespace Playground.Models {
     public int Height { get { return _Height; } set { _Height = value; Dirty = true; } }
     public int AngleA { get { return _AngleA; } set { _AngleA = value; Dirty = true; } }
     public int AngleB { get { return _AngleB; } set { _AngleB = value; Dirty = true; } }
+    public int Weight { get { return _Weight; } set { _Weight = value; Dirty = true; } }
 
 
     public string ColorA { get { return _ColorA; } set { _ColorA = value; Dirty = true; } }
@@ -74,12 +76,13 @@ namespace Playground.Models {
       _Height = base1[7].AsInt();
       _AngleA = base1[8].AsInt();
       _AngleB = base1[9].AsInt();
+      _Weight = base1[10].AsInt();
 
-      _ColorA = base1[10].AsBase64Decoded();
-      _ColorB = base1[11].AsBase64Decoded();
-      _Font = base1[12].AsBase64Decoded();
-      base.Text = base1[13].AsBase64Decoded();
-      _Caption = base1[14].AsBase64Decoded();      
+      _ColorA = base1[11].AsBase64Decoded();
+      _ColorB = base1[12].AsBase64Decoded();
+      _Font = base1[13].AsBase64Decoded();
+      base.Text = base1[14].AsBase64Decoded();
+      _Caption = base1[15].AsBase64Decoded();      
 
       if (_ColorA == "<NULL>") _ColorA = "";
       if (_ColorB == "<NULL>") _ColorB = "";
@@ -101,7 +104,7 @@ namespace Playground.Models {
       if (string.IsNullOrEmpty(this._Font)) aC = "<NULL>";
       if (string.IsNullOrEmpty(this._Caption)) aRT = "<NULL>";      
 
-      return ($"{Id} {OwnerId} {_TypeId} {_ItemRank} {_Left} {_Top} {_Width} {_Height} {_AngleA} {_AngleB} " +
+      return ($"{Id} {OwnerId} {_TypeId} {_ItemRank} {_Left} {_Top} {_Width} {_Height} {_AngleA} {_AngleB} {_Weight} " +
              $"{aIAT.AsBase64Encoded()} {aBC.AsBase64Encoded()} {aC.AsBase64Encoded()} {base.Text.AsBase64Encoded()} {aRT.AsBase64Encoded()}").AsBase64Encoded();
     }
 

@@ -37,7 +37,7 @@
       label5 = new Label();
       label4 = new Label();
       cbAspectRatio = new ComboBox();
-      trackBar6 = new TrackBar();
+      tbWeight = new TrackBar();
       tbFrame = new TrackBar();
       splitContainer2 = new SplitContainer();
       splitContainer3 = new SplitContainer();
@@ -51,6 +51,8 @@
       MenuDeleteItem = new ToolStripMenuItem();
       imageList1 = new ImageList(components);
       splitContainer4 = new SplitContainer();
+      AngleBTrackBar = new TrackBar();
+      AngleATrackBar = new TrackBar();
       label1 = new Label();
       tbHeight = new TrackBar();
       tbTop = new TrackBar();
@@ -78,7 +80,7 @@
       splitContainer1.Panel1.SuspendLayout();
       splitContainer1.Panel2.SuspendLayout();
       splitContainer1.SuspendLayout();
-      ((System.ComponentModel.ISupportInitialize)trackBar6).BeginInit();
+      ((System.ComponentModel.ISupportInitialize)tbWeight).BeginInit();
       ((System.ComponentModel.ISupportInitialize)tbFrame).BeginInit();
       ((System.ComponentModel.ISupportInitialize)splitContainer2).BeginInit();
       splitContainer2.Panel1.SuspendLayout();
@@ -92,6 +94,8 @@
       ((System.ComponentModel.ISupportInitialize)splitContainer4).BeginInit();
       splitContainer4.Panel2.SuspendLayout();
       splitContainer4.SuspendLayout();
+      ((System.ComponentModel.ISupportInitialize)AngleBTrackBar).BeginInit();
+      ((System.ComponentModel.ISupportInitialize)AngleATrackBar).BeginInit();
       ((System.ComponentModel.ISupportInitialize)tbHeight).BeginInit();
       ((System.ComponentModel.ISupportInitialize)tbTop).BeginInit();
       ((System.ComponentModel.ISupportInitialize)tbWidth).BeginInit();
@@ -179,7 +183,7 @@
       splitContainer1.Panel1.Controls.Add(label5);
       splitContainer1.Panel1.Controls.Add(label4);
       splitContainer1.Panel1.Controls.Add(cbAspectRatio);
-      splitContainer1.Panel1.Controls.Add(trackBar6);
+      splitContainer1.Panel1.Controls.Add(tbWeight);
       splitContainer1.Panel1.Controls.Add(tbFrame);
       // 
       // splitContainer1.Panel2
@@ -234,16 +238,17 @@
       cbAspectRatio.Size = new Size(151, 28);
       cbAspectRatio.TabIndex = 2;
       // 
-      // trackBar6
+      // tbWeight
       // 
-      trackBar6.AutoSize = false;
-      trackBar6.Location = new Point(547, 52);
-      trackBar6.Maximum = 4000;
-      trackBar6.Name = "trackBar6";
-      trackBar6.Size = new Size(305, 23);
-      trackBar6.TabIndex = 1;
-      trackBar6.TickFrequency = 100;
-      trackBar6.Value = 200;
+      tbWeight.AutoSize = false;
+      tbWeight.Location = new Point(547, 50);
+      tbWeight.Maximum = 100;
+      tbWeight.Name = "tbWeight";
+      tbWeight.Size = new Size(305, 23);
+      tbWeight.TabIndex = 1;
+      tbWeight.TickFrequency = 10;
+      tbWeight.Value = 3;
+      tbWeight.ValueChanged += tbWeight_ValueChanged;
       // 
       // tbFrame
       // 
@@ -381,12 +386,38 @@
       // 
       // splitContainer4.Panel2
       // 
+      splitContainer4.Panel2.Controls.Add(AngleBTrackBar);
+      splitContainer4.Panel2.Controls.Add(AngleATrackBar);
       splitContainer4.Panel2.Controls.Add(label1);
       splitContainer4.Panel2.Controls.Add(tbHeight);
       splitContainer4.Panel2.Controls.Add(tbTop);
       splitContainer4.Size = new Size(761, 403);
       splitContainer4.SplitterDistance = 582;
       splitContainer4.TabIndex = 0;
+      // 
+      // AngleBTrackBar
+      // 
+      AngleBTrackBar.Location = new Point(58, 256);
+      AngleBTrackBar.Maximum = 100;
+      AngleBTrackBar.Name = "AngleBTrackBar";
+      AngleBTrackBar.Orientation = Orientation.Vertical;
+      AngleBTrackBar.Size = new Size(56, 104);
+      AngleBTrackBar.TabIndex = 4;
+      AngleBTrackBar.TickStyle = TickStyle.Both;
+      AngleBTrackBar.Value = 10;
+      AngleBTrackBar.ValueChanged += AngleBTrackBar_ValueChanged;
+      // 
+      // AngleATrackBar
+      // 
+      AngleATrackBar.Location = new Point(10, 256);
+      AngleATrackBar.Maximum = 100;
+      AngleATrackBar.Name = "AngleATrackBar";
+      AngleATrackBar.Orientation = Orientation.Vertical;
+      AngleATrackBar.Size = new Size(56, 104);
+      AngleATrackBar.TabIndex = 3;
+      AngleATrackBar.TickStyle = TickStyle.Both;
+      AngleATrackBar.Value = 10;
+      AngleATrackBar.ValueChanged += AngleATrackBar_ValueChanged;
       // 
       // label1
       // 
@@ -403,7 +434,7 @@
       tbHeight.Maximum = 100;
       tbHeight.Name = "tbHeight";
       tbHeight.Orientation = Orientation.Vertical;
-      tbHeight.Size = new Size(56, 190);
+      tbHeight.Size = new Size(56, 197);
       tbHeight.TabIndex = 1;
       tbHeight.TickStyle = TickStyle.Both;
       tbHeight.ValueChanged += tbHeight_ValueChanged;
@@ -414,7 +445,7 @@
       tbTop.Maximum = 100;
       tbTop.Name = "tbTop";
       tbTop.Orientation = Orientation.Vertical;
-      tbTop.Size = new Size(56, 190);
+      tbTop.Size = new Size(56, 197);
       tbTop.TabIndex = 0;
       tbTop.TickStyle = TickStyle.Both;
       tbTop.Value = 10;
@@ -422,9 +453,9 @@
       // 
       // btnFont
       // 
-      btnFont.Location = new Point(798, 83);
+      btnFont.Location = new Point(798, 102);
       btnFont.Name = "btnFont";
-      btnFont.Size = new Size(112, 62);
+      btnFont.Size = new Size(74, 27);
       btnFont.TabIndex = 10;
       btnFont.Text = "Font";
       btnFont.UseVisualStyleBackColor = true;
@@ -442,7 +473,7 @@
       // cbType
       // 
       cbType.FormattingEnabled = true;
-      cbType.Items.AddRange(new object[] { "None", "Frame", "Element", "Rectangle", "Oval" });
+      cbType.Items.AddRange(new object[] { "None", "Frame", "Element", "Rectangle", "Oval", "Arc" });
       cbType.Location = new Point(64, 14);
       cbType.Name = "cbType";
       cbType.Size = new Size(150, 28);
@@ -573,7 +604,7 @@
       splitContainer1.Panel2.ResumeLayout(false);
       ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
       splitContainer1.ResumeLayout(false);
-      ((System.ComponentModel.ISupportInitialize)trackBar6).EndInit();
+      ((System.ComponentModel.ISupportInitialize)tbWeight).EndInit();
       ((System.ComponentModel.ISupportInitialize)tbFrame).EndInit();
       splitContainer2.Panel1.ResumeLayout(false);
       splitContainer2.Panel2.ResumeLayout(false);
@@ -589,6 +620,8 @@
       splitContainer4.Panel2.PerformLayout();
       ((System.ComponentModel.ISupportInitialize)splitContainer4).EndInit();
       splitContainer4.ResumeLayout(false);
+      ((System.ComponentModel.ISupportInitialize)AngleBTrackBar).EndInit();
+      ((System.ComponentModel.ISupportInitialize)AngleATrackBar).EndInit();
       ((System.ComponentModel.ISupportInitialize)tbHeight).EndInit();
       ((System.ComponentModel.ISupportInitialize)tbTop).EndInit();
       ((System.ComponentModel.ISupportInitialize)tbWidth).EndInit();
@@ -623,7 +656,7 @@
     private Label label8;
     private Button BrowseFileNameButton;
     private Label label7;
-    private TrackBar trackBar6;
+    private TrackBar tbWeight;
     private TabPage LogsTab;
     private TextBox edLogMsg;
     private OpenFileDialog openFileDialog1;
@@ -645,5 +678,7 @@
     private Label label10;
     private ComboBox cbType;
     private Button btnFont;
+    private TrackBar AngleBTrackBar;
+    private TrackBar AngleATrackBar;
   }
 }

@@ -6,15 +6,18 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Playground.Models {
-  public enum TnType {
+  public enum ItemTypeEnum {
     Null = 0,
     Frame = 1,
-    Element =2,
+    Element = 2,
     Rectangle = 3,
     Oval =4,
+    Arc =5,
+    Line = 6,
+    FloodFill = 7,
   }
 
-  public enum Tii {
+  public enum ImageIndexEnum {
     Null = 0,
     Frame = 1,
     Element = 2,
@@ -29,17 +32,17 @@ namespace Playground.Models {
       set {
         _id = value;
         switch (this.TypeId) {
-          case (int)TnType.Null:
-            this.ImageIndex = (int)Tii.Null;
-            this.SelectedImageIndex = (int)Tii.Null;
+          case (int)ItemTypeEnum.Null:
+            this.ImageIndex = (int)ImageIndexEnum.Null;
+            this.SelectedImageIndex = (int)ImageIndexEnum.Null;
             break;
-          case (int)TnType.Frame:
-            this.ImageIndex = (int)Tii.Frame;
-            this.SelectedImageIndex = (int)Tii.Frame;
+          case (int)ItemTypeEnum.Frame:
+            this.ImageIndex = (int)ImageIndexEnum.Frame;
+            this.SelectedImageIndex = (int)ImageIndexEnum.Frame;
             break;
-          case (int)TnType.Element:
-            this.ImageIndex = (int)Tii.Element;
-            this.SelectedImageIndex = (int)Tii.Element;
+          case (int)ItemTypeEnum.Element:
+            this.ImageIndex = (int)ImageIndexEnum.Element;
+            this.SelectedImageIndex = (int)ImageIndexEnum.Element;
             break;
         }
       }
@@ -67,9 +70,9 @@ namespace Playground.Models {
 
       this[1] = new ItemType() { TypeId = 1, OwnerTypeId = -1, CatagoryTypeId = 0, EditorTypeId = 1, TypeRank = 1, TypeEnum = 1, Visible = true, Readonly = false, Name = "Frame", Desc = "Root " };
       this[2] = new ItemType() { TypeId = 2, OwnerTypeId = 1, CatagoryTypeId = 2, EditorTypeId = 10, TypeRank = 1, TypeEnum = 2, Visible = true, Readonly = false, Name = "Element", Desc = "Element" };
-      this[3] = new ItemType() { TypeId = 3, OwnerTypeId = 2, CatagoryTypeId = 2, EditorTypeId = 10, TypeRank = 2, TypeEnum = 3, Visible = true, Readonly = false, Name = "Rectangle", Desc = "Rectangle"};
-      this[4] = new ItemType() { TypeId = 4, OwnerTypeId = 2, CatagoryTypeId = 2, EditorTypeId = 10, TypeRank = 3, TypeEnum = 4, Visible = true, Readonly = false, Name = "Oval", Desc = "Oval" };
-
+      this[3] = new ItemType() { TypeId = 3, OwnerTypeId = 2, CatagoryTypeId = 2, EditorTypeId = 10, TypeRank = 2, TypeEnum = 2, Visible = true, Readonly = false, Name = "Rectangle", Desc = "Rectangle"};
+      this[4] = new ItemType() { TypeId = 4, OwnerTypeId = 2, CatagoryTypeId = 2, EditorTypeId = 10, TypeRank = 3, TypeEnum = 2, Visible = true, Readonly = false, Name = "Oval", Desc = "Oval" };
+      this[5] = new ItemType() { TypeId = 5, OwnerTypeId = 2, CatagoryTypeId = 2, EditorTypeId = 10, TypeRank = 4, TypeEnum = 2, Visible = true, Readonly = false, Name = "Arc", Desc = "Oval" };
 
     }
 
