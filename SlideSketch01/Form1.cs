@@ -17,6 +17,7 @@ namespace Playground {
     private string _fileName = "No File Open";
     private string _folder;
     private bool _drawTimerRunning = false;
+    private Item? _copiedItem;
     public bool DrawTimerRunning {
       get { return _drawTimerRunning; }
       set {
@@ -37,7 +38,7 @@ namespace Playground {
       this.Text = "SlideSketch name a file and click design to continue";
       label4.Text = "";
       ConfigureSliders();
-      UpdateCbTypeWithItemTypes(); 
+      UpdateCbTypeWithItemTypes();
     }
 
     private void ConfigureSliders() {
@@ -214,11 +215,15 @@ namespace Playground {
         MenuDeleteItem.Enabled = false;
         MenuMoveUpItem.Enabled = false;
         MenuDeleteItem.Enabled = false;
-      } else {
+        copyItemToolStripMenuItem.Enabled = false;
+        pasteItemToolStripMenuItem.Enabled = false;
+      } else {        
         MenuAddElement.Enabled = true;
         MenuDeleteItem.Enabled = true;
         MenuMoveUpItem.Enabled = true;
         MenuDeleteItem.Enabled = true;
+        copyItemToolStripMenuItem.Enabled = true;
+        pasteItemToolStripMenuItem.Enabled = (_copiedItem != null && treeView1.SelectedNode is Item selectedItem);
       }
     }
 
@@ -325,7 +330,7 @@ namespace Playground {
     private void cbType_SelectedIndexChanged(object sender, EventArgs e) {
       if (_inEditItem == null || _inReset || cbType.SelectedItem == null) return;
       string selectedType = cbType.SelectedItem?.ToString() ?? string.Empty;
-      int selectedIndex = (Enum.TryParse(selectedType, out ItemTypeEnum itemType)) ? (int)itemType : 0;      
+      int selectedIndex = (Enum.TryParse(selectedType, out ItemTypeEnum itemType)) ? (int)itemType : 0;
       if (selectedIndex > 1) {
         _inEditItem.TypeId = selectedIndex;
         SaveInEditChanges();
@@ -468,6 +473,8 @@ namespace Playground {
         FocusedItem = _inEditItem,
         FrameForgroundBrush = new SolidBrush(frame.ColorA.AsColor()),
         FrameBackgroundBrush = new SolidBrush(frame.ColorB.AsColor()),
+        ItemBrushA = new SolidBrush(frame.ColorA.AsColor()),
+        ItemBrushB = new SolidBrush(frame.ColorB.AsColor()),
         bg = bg
       };
       try {
@@ -499,7 +506,7 @@ namespace Playground {
         bg.Dispose();
         graphics.Dispose();
       }
-    } 
+    }
     private void Slider_MouseEnter(object sender, EventArgs e) {
       this.Cursor = Cursors.Hand; // Change to slider icon
     }
@@ -508,7 +515,45 @@ namespace Playground {
       this.Cursor = Cursors.Default; // Revert to default cursor
     }
 
+    private void copyItemToolStripMenuItem_MouseDown(object sender, MouseEventArgs e) {
+      if (treeView1.SelectedNode is Item selectedItem) {
+        _copiedItem = selectedItem.AsClone(); // Assuming AsClone creates a deep copy of the item
+        LogMsg($"Item '{selectedItem.Name}' copied.");
+      }
+    }
 
+    private void pasteItemToolStripMenuItem_Click(object sender, EventArgs e) {
+      if (_copiedItem != null && treeView1.SelectedNode is Item selectedItem) {
+        Item newItem = _copiedItem.AsClone();
+        AssignNewIds(newItem, selectedItem.Id);
+        AddItemToPackage(newItem);       
 
+        // Add the new item to the tree and the underlying data structure
+        selectedItem.Nodes.Add(newItem);        
+
+        LogMsg($"Item '{newItem.Name}' pasted under '{selectedItem.Name}'.");
+      }
+    }
+
+    private void AssignNewIds(Item item, int newOwnerId) {
+      item.Id = _filePackage.PackageItems.GetNextId();
+      item.OwnerId = newOwnerId;
+
+      foreach (Item child in item.Nodes) {
+        AssignNewIds(child, item.Id);
+      }
+    }
+
+    private void AddItemToPackage(Item item) {
+      _filePackage.PackageItems[item.Id] = item;
+
+      foreach (Item child in item.Nodes) {
+        AddItemToPackage(child);
+      }
+    }
+
+    private void takeSnapshotToolStripMenuItem_Click(object sender, EventArgs e) {
+
+    }
   }
 }

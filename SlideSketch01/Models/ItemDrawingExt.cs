@@ -57,8 +57,9 @@ namespace Playground.Models {
     
     public static int DrawElement(this Item node, ContainerProps props) {
       if (node == null || node.TypeId < 2 || props?.bg == null) return 0;
-      Brush brushForground = new SolidBrush(node.ColorA.AsColor());
-      Brush brushBackground = new SolidBrush(node.ColorB.AsColor());
+
+      props.ItemBrushA = new SolidBrush(node.ColorA.AsColor());
+      props.ItemBrushB = new SolidBrush(node.ColorB.AsColor());      
       Pen itemPen = new Pen(node.ColorA.AsColor()){
         Width = node.Weight
       };
@@ -69,15 +70,15 @@ namespace Playground.Models {
       switch (nodeType) {
         case (int)ItemTypeEnum.Element: 
           var PrintRegion = props.FocusedRectangle(node);
-          props.bg.Graphics.FillRectangle(brushBackground, PrintRegion);
+          props.bg.Graphics.FillRectangle(props.ItemBrushB, PrintRegion);
           if (node.Caption.Length > 0) { 
-            props.bg.Graphics.DrawString(node.Caption, workingFont, brushForground, 
+            props.bg.Graphics.DrawString(node.Caption, workingFont, props.ItemBrushA, 
               PrintRegion.Left.AsFloat(), PrintRegion.Top.AsFloat() + (PrintRegion.Height/2) - (wfSize.Height/2) );
           }
           break;
         case (int)ItemTypeEnum.Rectangle:
           var PrintRRegion = props.FocusedRectangle(node);
-          props.bg.Graphics.FillRectangle(brushBackground, PrintRRegion);
+          props.bg.Graphics.FillRectangle(props.ItemBrushB, PrintRRegion);
           props.bg.Graphics.DrawRectangle(itemPen, PrintRRegion);
           break;
         case (int)ItemTypeEnum.Oval:
@@ -96,7 +97,7 @@ namespace Playground.Models {
       foreach (var child in node.Nodes) {
         Item? childItem = child as Item;
         if (childItem != null) {
-          DrawElement(childItem, props);
+          childItem.DrawElement(props);
         }
       }
 
@@ -104,20 +105,19 @@ namespace Playground.Models {
     }
 
     public static void DrawOval(this Item node, ContainerProps props) {
-      if (props == null || node == null || props.bg == null) return;
-      var brush = new SolidBrush(node.ColorA.AsColor());
+      if (props == null || node == null || props.bg == null) return;      
       float left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat()) / 100);
       float top = ((props.ContainerHeight.AsFloat() * node.Top.AsFloat()) / 100);
       float width = (props.ContainerWidth.AsFloat() * node.Width.AsFloat()) / 100;
       float height = (props.ContainerHeight.AsFloat() * node.Height.AsFloat()) / 100;
       float startAngle = node.AngleA.AsFloat() * 360 / 100;
       float sweepAngle = node.AngleB.AsFloat() * 360 / 100;
-      props.bg.Graphics.FillEllipse(brush, left, top, width, height);      
+      props.bg.Graphics.FillEllipse(props.ItemBrushA, left, top, width, height);      
     }
 
     public static void DrawArc(this Item node, ContainerProps props) { 
       if (props == null || node == null || props.bg == null) return;
-      Pen pen = new Pen(props.FrameForgroundBrush, node.Weight);
+      Pen pen = new Pen(props.ItemBrushA, node.Weight);
       float left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat())/100);
       float top = ((props.ContainerHeight.AsFloat() * node.Top.AsFloat()) / 100);
       float width = (props.ContainerWidth.AsFloat() * node.Width.AsFloat()) / 100;
@@ -130,7 +130,7 @@ namespace Playground.Models {
     public static void DrawLine(this Item node, ContainerProps props) {
       if (props == null || node == null || props.bg == null) return;
 
-      Pen pen = new Pen(props.FrameForgroundBrush, node.Weight);
+      Pen pen = new Pen(props.ItemBrushA, node.Weight);
       float startX = (props.ContainerWidth * node.Left) / 100;
       float startY = (props.ContainerHeight * node.Top) / 100;
       float endX = (props.ContainerWidth * node.Width) / 100;
@@ -200,7 +200,6 @@ namespace Playground.Models {
 
     }
    
-
     public static Bitmap ToBitmap(this ContainerProps props) { 
       Bitmap bitmap = new Bitmap(props.ContainerWidth, props.ContainerHeight);
       using (Graphics g = Graphics.FromImage(bitmap)) {
@@ -223,6 +222,8 @@ namespace Playground.Models {
     public BufferedGraphics? bg { get; set; } = null;
     public Brush FrameForgroundBrush { get; set; }
     public Brush FrameBackgroundBrush { get; set; }
+    public Brush ItemBrushA { get; set; }
+    public Brush ItemBrushB { get; set; }
     public Item Frame { get; set; }
     public Item? FocusedItem { get; set;}
     public ContainerProps() { }

@@ -159,8 +159,16 @@ namespace Playground.Models {
     }
 
     public Item AsClone() {
-      Item item = new Item();
-      return item.FromChunk(AsChunk());
+      string chunk = AsChunk();
+      Item item = new Item().FromChunk(chunk);
+
+      // Recursively clone child nodes
+      foreach (Item child in this.Nodes) {        
+        Item childClone = child.AsClone();
+        childClone.OwnerId = item.Id; // Set the owner to the cloned item
+        item.Nodes.Add(childClone);
+      }
+      return item;
     }
 
 

@@ -46,9 +46,12 @@
       MenuAddFrame = new ToolStripMenuItem();
       MenuAddElement = new ToolStripMenuItem();
       toolStripSeparator1 = new ToolStripSeparator();
+      copyItemToolStripMenuItem = new ToolStripMenuItem();
+      pasteItemToolStripMenuItem = new ToolStripMenuItem();
       MenuMoveUpItem = new ToolStripMenuItem();
       toolStripSeparator2 = new ToolStripSeparator();
       MenuDeleteItem = new ToolStripMenuItem();
+      takeSnapshotToolStripMenuItem = new ToolStripMenuItem();
       imageList1 = new ImageList(components);
       splitContainer4 = new SplitContainer();
       AngleBTrackBar = new TrackBar();
@@ -185,6 +188,7 @@
       splitContainer1.Panel1.Controls.Add(cbAspectRatio);
       splitContainer1.Panel1.Controls.Add(tbWeight);
       splitContainer1.Panel1.Controls.Add(tbFrame);
+      splitContainer1.Panel1.MouseEnter += Slider_MouseLeave;
       // 
       // splitContainer1.Panel2
       // 
@@ -284,6 +288,7 @@
       splitContainer2.Panel2.Controls.Add(label2);
       splitContainer2.Panel2.Controls.Add(tbWidth);
       splitContainer2.Panel2.Controls.Add(tbLeft);
+      splitContainer2.Panel2.MouseEnter += Slider_MouseLeave;
       splitContainer2.Size = new Size(1007, 557);
       splitContainer2.SplitterDistance = 403;
       splitContainer2.TabIndex = 0;
@@ -298,6 +303,7 @@
       // splitContainer3.Panel1
       // 
       splitContainer3.Panel1.Controls.Add(treeView1);
+      splitContainer3.Panel1.MouseEnter += Slider_MouseLeave;
       // 
       // splitContainer3.Panel2
       // 
@@ -321,13 +327,14 @@
       treeView1.AfterLabelEdit += treeView1_AfterLabelEdit;
       treeView1.BeforeExpand += treeView1_BeforeExpand;
       treeView1.AfterSelect += treeView1_AfterSelect;
+      treeView1.MouseEnter += Slider_MouseLeave;
       // 
       // MenuTree
       // 
       MenuTree.ImageScalingSize = new Size(20, 20);
-      MenuTree.Items.AddRange(new ToolStripItem[] { MenuAddFrame, MenuAddElement, toolStripSeparator1, MenuMoveUpItem, toolStripSeparator2, MenuDeleteItem });
+      MenuTree.Items.AddRange(new ToolStripItem[] { MenuAddFrame, MenuAddElement, toolStripSeparator1, copyItemToolStripMenuItem, pasteItemToolStripMenuItem, MenuMoveUpItem, toolStripSeparator2, MenuDeleteItem, takeSnapshotToolStripMenuItem });
       MenuTree.Name = "MenuTree";
-      MenuTree.Size = new Size(173, 112);
+      MenuTree.Size = new Size(173, 184);
       MenuTree.Opening += MenuTree_Opening;
       // 
       // MenuAddFrame
@@ -349,6 +356,20 @@
       toolStripSeparator1.Name = "toolStripSeparator1";
       toolStripSeparator1.Size = new Size(169, 6);
       // 
+      // copyItemToolStripMenuItem
+      // 
+      copyItemToolStripMenuItem.Name = "copyItemToolStripMenuItem";
+      copyItemToolStripMenuItem.Size = new Size(172, 24);
+      copyItemToolStripMenuItem.Text = "Copy Item";
+      copyItemToolStripMenuItem.MouseDown += copyItemToolStripMenuItem_MouseDown;
+      // 
+      // pasteItemToolStripMenuItem
+      // 
+      pasteItemToolStripMenuItem.Name = "pasteItemToolStripMenuItem";
+      pasteItemToolStripMenuItem.Size = new Size(172, 24);
+      pasteItemToolStripMenuItem.Text = "Paste Item";
+      pasteItemToolStripMenuItem.Click += pasteItemToolStripMenuItem_Click;
+      // 
       // MenuMoveUpItem
       // 
       MenuMoveUpItem.Name = "MenuMoveUpItem";
@@ -367,6 +388,13 @@
       MenuDeleteItem.Size = new Size(172, 24);
       MenuDeleteItem.Text = "Delete Item";
       MenuDeleteItem.Click += MenuDeleteItem_Click;
+      // 
+      // takeSnapshotToolStripMenuItem
+      // 
+      takeSnapshotToolStripMenuItem.Name = "takeSnapshotToolStripMenuItem";
+      takeSnapshotToolStripMenuItem.Size = new Size(172, 24);
+      takeSnapshotToolStripMenuItem.Text = "Take Snapshot";
+      takeSnapshotToolStripMenuItem.Click += takeSnapshotToolStripMenuItem_Click;
       // 
       // imageList1
       // 
@@ -391,6 +419,7 @@
       splitContainer4.Panel2.Controls.Add(label1);
       splitContainer4.Panel2.Controls.Add(tbHeight);
       splitContainer4.Panel2.Controls.Add(tbTop);
+      splitContainer4.Panel2.MouseEnter += Slider_MouseLeave;
       splitContainer4.Size = new Size(761, 403);
       splitContainer4.SplitterDistance = 582;
       splitContainer4.TabIndex = 0;
@@ -680,5 +709,8 @@
     private Button btnFont;
     private TrackBar AngleBTrackBar;
     private TrackBar AngleATrackBar;
+    private ToolStripMenuItem copyItemToolStripMenuItem;
+    private ToolStripMenuItem pasteItemToolStripMenuItem;
+    private ToolStripMenuItem takeSnapshotToolStripMenuItem;
   }
 }
