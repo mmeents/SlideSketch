@@ -1,14 +1,16 @@
 
-using Playground.Models;
+using SlideSketch.Models;
+using System.Collections.Concurrent;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace Playground {
+namespace SlideSketch {
   public partial class Form1 : Form {
+    private ConcurrentDictionary<string, Bitmap> _bitmapCache = new ConcurrentDictionary<string, Bitmap>();
     private SettingsFile _settingsPack { get; set; }
     private Settings _settings;
     private Types _types;
     private FilePackage _filePackage;
-    private ItemCaster _itemCaster;
+    private ItemService _itemCaster;
     private Item? _inEditItem = null;
     private bool _inReorder = false;
     private bool _inReset = false;
@@ -184,7 +186,7 @@ namespace Playground {
       this.Text = "SlideSketch working on " + _fileName;
       AddFileToMRUL(_fileName);
       _filePackage = new FilePackage(_fileName, this);
-      _itemCaster = new ItemCaster(this, treeView1, _filePackage, _types);
+      _itemCaster = new ItemService(this, treeView1, _filePackage, _types);
       _itemCaster.LoadTreeviewItemsAsync(treeView1);
       treeView1.ExpandAll();
       DrawTimerRunning = true;
@@ -465,7 +467,7 @@ namespace Playground {
 
       Graphics graphics = splitContainer4.Panel1.CreateGraphics();
       BufferedGraphics bg = BufferedGraphicsManager.Current.Allocate(graphics, splitContainer4.Panel1.DisplayRectangle);
-      ContainerProps props = new ContainerProps() {
+      SurfaceProps surface = new SurfaceProps() {
         ContainerWidth = splitContainer4.Panel1.Width,
         ContainerHeight = splitContainer4.Panel1.Height,
         ContainerAspectRatio = cbAspectRatio.SelectedItem.AsString().GetAspectRatio(),
@@ -478,10 +480,10 @@ namespace Playground {
         bg = bg
       };
       try {
-        Rectangle drawRectangle = props.FrameRectangle();
-        Rectangle displayRectangle = props.DisplayRectangle();
+        Rectangle drawRectangle = surface.FrameRectangle();
+        Rectangle displayRectangle = surface.DisplayRectangle();
 
-        Pen framePen = new Pen(props.FrameForgroundBrush);
+        Pen framePen = new Pen(surface.FrameForgroundBrush);
         framePen.Width = 3;
 
         Region displayReg = new Region(displayRectangle);
@@ -489,13 +491,13 @@ namespace Playground {
 
         bg.Graphics.FillRegion(SystemBrushes.ButtonFace, displayReg);
 
-        bg.Graphics.FillRegion(props.FrameBackgroundBrush, drawReg);
+        bg.Graphics.FillRegion(surface.FrameBackgroundBrush, drawReg);
         bg.Graphics.DrawRectangle(framePen, 0, 0, drawRectangle.Width.AsInt() - 1, drawRectangle.Height.AsInt() - 1);
 
         foreach (var element in frame.Nodes) {
           Item? elementItem = element as Item;
           if (elementItem != null) {
-            elementItem.DrawElement(props);
+            elementItem.DrawElement(surface, _bitmapCache);
           }
         }
 
@@ -517,38 +519,15 @@ namespace Playground {
 
     private void copyItemToolStripMenuItem_MouseDown(object sender, MouseEventArgs e) {
       if (treeView1.SelectedNode is Item selectedItem) {
-        _copiedItem = selectedItem.AsClone(); // Assuming AsClone creates a deep copy of the item
+        _copiedItem = selectedItem; // Assuming AsClone creates a deep copy of the item
         LogMsg($"Item '{selectedItem.Name}' copied.");
       }
     }
 
     private void pasteItemToolStripMenuItem_Click(object sender, EventArgs e) {
-      if (_copiedItem != null && treeView1.SelectedNode is Item selectedItem) {
-        Item newItem = _copiedItem.AsClone();
-        AssignNewIds(newItem, selectedItem.Id);
-        AddItemToPackage(newItem);       
-
-        // Add the new item to the tree and the underlying data structure
-        selectedItem.Nodes.Add(newItem);        
-
-        LogMsg($"Item '{newItem.Name}' pasted under '{selectedItem.Name}'.");
-      }
-    }
-
-    private void AssignNewIds(Item item, int newOwnerId) {
-      item.Id = _filePackage.PackageItems.GetNextId();
-      item.OwnerId = newOwnerId;
-
-      foreach (Item child in item.Nodes) {
-        AssignNewIds(child, item.Id);
-      }
-    }
-
-    private void AddItemToPackage(Item item) {
-      _filePackage.PackageItems[item.Id] = item;
-
-      foreach (Item child in item.Nodes) {
-        AddItemToPackage(child);
+      if (_copiedItem != null && treeView1.SelectedNode is Item selectedItem) {     
+        _itemCaster.CopyItemTo( selectedItem, _copiedItem);
+        LogMsg($"Item '{_copiedItem.Name}' pasted under '{selectedItem.Name}'.");
       }
     }
 

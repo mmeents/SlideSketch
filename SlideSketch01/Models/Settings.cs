@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Playground.Models {
+namespace SlideSketch.Models {
 
   [MessagePackObject]
   public class SettingProperty {

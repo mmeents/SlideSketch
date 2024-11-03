@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Playground.Models {
+namespace SlideSketch.Models {
   public static class ItemDrawingExt {
 
     public static decimal GetAspectRatio(this string ratioString) {
@@ -55,12 +56,12 @@ namespace Playground.Models {
       return new Font(FontName, FontSize, thisFontStyle);
     }
     
-    public static int DrawElement(this Item node, ContainerProps props) {
+public static int DrawElement(this Item node, SurfaceProps props, ConcurrentDictionary<string, Bitmap> bitmapCache) {
       if (node == null || node.TypeId < 2 || props?.bg == null) return 0;
 
       props.ItemBrushA = new SolidBrush(node.ColorA.AsColor());
-      props.ItemBrushB = new SolidBrush(node.ColorB.AsColor());      
-      Pen itemPen = new Pen(node.ColorA.AsColor()){
+      props.ItemBrushB = new SolidBrush(node.ColorB.AsColor());
+      Pen itemPen = new Pen(node.ColorA.AsColor()) {
         Width = node.Weight
       };
       Font workingFont = node.Font;
@@ -68,12 +69,12 @@ namespace Playground.Models {
       itemPen.Width = 3;
       var nodeType = node.TypeId;
       switch (nodeType) {
-        case (int)ItemTypeEnum.Element: 
+        case (int)ItemTypeEnum.Element:
           var PrintRegion = props.FocusedRectangle(node);
           props.bg.Graphics.FillRectangle(props.ItemBrushB, PrintRegion);
-          if (node.Caption.Length > 0) { 
-            props.bg.Graphics.DrawString(node.Caption, workingFont, props.ItemBrushA, 
-              PrintRegion.Left.AsFloat(), PrintRegion.Top.AsFloat() + (PrintRegion.Height/2) - (wfSize.Height/2) );
+          if (node.Caption.Length > 0) {
+            props.bg.Graphics.DrawString(node.Caption, workingFont, props.ItemBrushA,
+                PrintRegion.Left.AsFloat(), PrintRegion.Top.AsFloat() + (PrintRegion.Height / 2) - (wfSize.Height / 2));
           }
           break;
         case (int)ItemTypeEnum.Rectangle:
@@ -82,7 +83,7 @@ namespace Playground.Models {
           props.bg.Graphics.DrawRectangle(itemPen, PrintRRegion);
           break;
         case (int)ItemTypeEnum.Oval:
-          node.DrawOval(props);          
+          node.DrawOval(props);
           break;
         case (int)ItemTypeEnum.Arc:
           node.DrawArc(props);
@@ -93,18 +94,21 @@ namespace Playground.Models {
         case (int)ItemTypeEnum.FloodFill:
           node.FloodFill(props);
           break;
+        case (int)ItemTypeEnum.Bitmap: // New case for Bitmap
+          node.DrawBitmap(props, bitmapCache);
+          break;
       }
       foreach (var child in node.Nodes) {
         Item? childItem = child as Item;
         if (childItem != null) {
-          childItem.DrawElement(props);
+          childItem.DrawElement(props, bitmapCache);
         }
       }
 
       return 0;
     }
 
-    public static void DrawOval(this Item node, ContainerProps props) {
+    public static void DrawOval(this Item node, SurfaceProps props) {
       if (props == null || node == null || props.bg == null) return;      
       float left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat()) / 100);
       float top = ((props.ContainerHeight.AsFloat() * node.Top.AsFloat()) / 100);
@@ -115,7 +119,7 @@ namespace Playground.Models {
       props.bg.Graphics.FillEllipse(props.ItemBrushA, left, top, width, height);      
     }
 
-    public static void DrawArc(this Item node, ContainerProps props) { 
+    public static void DrawArc(this Item node, SurfaceProps props) { 
       if (props == null || node == null || props.bg == null) return;
       Pen pen = new Pen(props.ItemBrushA, node.Weight);
       float left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat())/100);
@@ -127,7 +131,7 @@ namespace Playground.Models {
       props.bg.Graphics.DrawArc(pen, left, top, width, height, startAngle, sweepAngle );
     }
 
-    public static void DrawLine(this Item node, ContainerProps props) {
+    public static void DrawLine(this Item node, SurfaceProps props) {
       if (props == null || node == null || props.bg == null) return;
 
       Pen pen = new Pen(props.ItemBrushA, node.Weight);
@@ -139,7 +143,7 @@ namespace Playground.Models {
       props.bg.Graphics.DrawLine(pen, startX, startY, endX, endY);
     }
 
-    public static void FloodFill(this Item node, ContainerProps props) {
+    public static void FloodFill(this Item node, SurfaceProps props) {
       if (node == null || props?.bg == null) return;
       var colorA = node.ColorA.AsColor().ToArgb();
       var colorB = node.ColorB.AsColor().ToArgb();
@@ -200,7 +204,7 @@ namespace Playground.Models {
 
     }
    
-    public static Bitmap ToBitmap(this ContainerProps props) { 
+    public static Bitmap ToBitmap(this SurfaceProps props) { 
       Bitmap bitmap = new Bitmap(props.ContainerWidth, props.ContainerHeight);
       using (Graphics g = Graphics.FromImage(bitmap)) {
         IntPtr hdc = g.GetHdc();
@@ -212,48 +216,31 @@ namespace Playground.Models {
       }
       return bitmap;
     }
+    public static void DrawBitmap(this Item node, SurfaceProps props, ConcurrentDictionary<string, Bitmap> bitmapCache) {
+      if (props == null || node == null || props.bg == null) return;
+
+      // Assuming node.Caption contains the path to the bitmap file
+      string bitmapPath = node.Caption;
+      if (string.IsNullOrEmpty(bitmapPath)) return;
+
+      Bitmap bitmap;
+      if (!bitmapCache.TryGetValue(bitmapPath, out bitmap)) {
+        if (!System.IO.File.Exists(bitmapPath)) return;
+        bitmap = new Bitmap(bitmapPath);
+        bitmapCache[bitmapPath] = bitmap;
+      }
+
+      float left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat()) / 100);
+      float top = ((props.ContainerHeight.AsFloat() * node.Top.AsFloat()) / 100);
+      float width = (props.ContainerWidth.AsFloat() * node.Width.AsFloat()) / 100;
+      float height = (props.ContainerHeight.AsFloat() * node.Height.AsFloat()) / 100;
+
+      props.bg.Graphics.DrawImage(bitmap, left, top, width, height);    
+    }
 
   }
 
-  public class ContainerProps {
-    public int ContainerWidth { get; set; } = 0;
-    public int ContainerHeight { get; set; } = 0;
-    public decimal ContainerAspectRatio { get; set; } = 1;
-    public BufferedGraphics? bg { get; set; } = null;
-    public Brush FrameForgroundBrush { get; set; }
-    public Brush FrameBackgroundBrush { get; set; }
-    public Brush ItemBrushA { get; set; }
-    public Brush ItemBrushB { get; set; }
-    public Item Frame { get; set; }
-    public Item? FocusedItem { get; set;}
-    public ContainerProps() { }
-    public Rectangle DisplayRectangle() { 
-      return new Rectangle(0,0,ContainerWidth, ContainerHeight);
-    }
-    public Rectangle FrameRectangle() {
-      decimal designSize = Frame.Width / (100).AsDecimal();
-      decimal frameWidth = (ContainerWidth * designSize);
-      decimal frameHeight = (frameWidth * ContainerAspectRatio);
-      return new Rectangle(0, 0, frameWidth.AsInt(), frameHeight.AsInt());
-    }
-    public Point FocusedTopLeft(Item item) { 
-      Rectangle bounds = FrameRectangle();
-      decimal designTop = item.Top / (100).AsDecimal() * bounds.Height;
-      decimal designLeft = item.Left / (100).AsDecimal() * bounds.Width;
-      var aPoint = new Point(designLeft.AsInt(), designTop.AsInt());
-      return aPoint;
-    }
-    public Rectangle FocusedRectangle(Item item) {
-      Rectangle bounds = FrameRectangle();
-      decimal designTop = item.Top / (100).AsDecimal() * bounds.Height;
-      decimal designLeft = item.Left / (100).AsDecimal() * bounds.Width;
-      decimal designHeight = item.Height / (100).AsDecimal() * bounds.Height;
-      decimal designWidth = item.Width / (100).AsDecimal() * bounds.Width;
-      var aRect = new Rectangle(designLeft.AsInt(), designTop.AsInt(), designWidth.AsInt(), designHeight.AsInt());
-      return aRect;
-    }
-
-  }
+ 
 
 
 }

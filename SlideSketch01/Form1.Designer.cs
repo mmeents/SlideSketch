@@ -1,4 +1,4 @@
-﻿namespace Playground {
+﻿namespace SlideSketch {
   partial class Form1 {
     /// <summary>
     ///  Required designer variable.
