@@ -59,6 +59,7 @@
       label1 = new Label();
       tbHeight = new TrackBar();
       tbTop = new TrackBar();
+      BmpBrowse = new Button();
       btnFont = new Button();
       label10 = new Label();
       cbType = new ComboBox();
@@ -76,6 +77,7 @@
       colorDialog1 = new ColorDialog();
       fontDialog1 = new FontDialog();
       timerDraw = new System.Windows.Forms.Timer(components);
+      openBmpDialog = new OpenFileDialog();
       TabCtrlRoot.SuspendLayout();
       SetupTab.SuspendLayout();
       DesignTab.SuspendLayout();
@@ -277,6 +279,7 @@
       // 
       // splitContainer2.Panel2
       // 
+      splitContainer2.Panel2.Controls.Add(BmpBrowse);
       splitContainer2.Panel2.Controls.Add(btnFont);
       splitContainer2.Panel2.Controls.Add(label10);
       splitContainer2.Panel2.Controls.Add(cbType);
@@ -480,9 +483,19 @@
       tbTop.Value = 10;
       tbTop.ValueChanged += tbTop_ValueChanged;
       // 
+      // BmpBrowse
+      // 
+      BmpBrowse.Location = new Point(798, 102);
+      BmpBrowse.Name = "BmpBrowse";
+      BmpBrowse.Size = new Size(85, 27);
+      BmpBrowse.TabIndex = 11;
+      BmpBrowse.Text = "Browse";
+      BmpBrowse.UseVisualStyleBackColor = true;
+      BmpBrowse.Click += BmpBrowse_Click;
+      // 
       // btnFont
       // 
-      btnFont.Location = new Point(798, 102);
+      btnFont.Location = new Point(136, 102);
       btnFont.Name = "btnFont";
       btnFont.Size = new Size(74, 27);
       btnFont.TabIndex = 10;
@@ -615,6 +628,13 @@
       timerDraw.Interval = 333;
       timerDraw.Tick += timerDraw_Tick;
       // 
+      // openBmpDialog
+      // 
+      openBmpDialog.DefaultExt = "bmp";
+      openBmpDialog.FileName = "openFileDialog2";
+      openBmpDialog.Filter = "Image Files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.tiff|All Files|*.*";
+      openBmpDialog.Title = "Select an Image File";
+      // 
       // Form1
       // 
       AutoScaleDimensions = new SizeF(8F, 20F);
@@ -623,6 +643,7 @@
       Controls.Add(TabCtrlRoot);
       Name = "Form1";
       Text = "Form1";
+      FormClosed += Form1_FormClosed;
       Shown += Form1_Shown;
       TabCtrlRoot.ResumeLayout(false);
       SetupTab.ResumeLayout(false);
@@ -712,5 +733,7 @@
     private ToolStripMenuItem copyItemToolStripMenuItem;
     private ToolStripMenuItem pasteItemToolStripMenuItem;
     private ToolStripMenuItem takeSnapshotToolStripMenuItem;
+    private OpenFileDialog openBmpDialog;
+    private Button BmpBrowse;
   }
 }

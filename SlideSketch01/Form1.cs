@@ -1,11 +1,12 @@
 
 using SlideSketch.Models;
 using System.Collections.Concurrent;
+using System.Windows.Forms;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace SlideSketch {
   public partial class Form1 : Form {
-    private ConcurrentDictionary<string, Bitmap> _bitmapCache = new ConcurrentDictionary<string, Bitmap>();
+    private BitmapCache _bitmapCache = new BitmapCache();
     private SettingsFile _settingsPack { get; set; }
     private Settings _settings;
     private Types _types;
@@ -219,7 +220,7 @@ namespace SlideSketch {
         MenuDeleteItem.Enabled = false;
         copyItemToolStripMenuItem.Enabled = false;
         pasteItemToolStripMenuItem.Enabled = false;
-      } else {        
+      } else {
         MenuAddElement.Enabled = true;
         MenuDeleteItem.Enabled = true;
         MenuMoveUpItem.Enabled = true;
@@ -307,7 +308,11 @@ namespace SlideSketch {
           // Handle the case where the type is not found
           cbType.SelectedIndex = -1; // or any other appropriate action
         }
-
+        if (cbType.SelectedItem.AsString().Contains("Bitmap")) {
+          BmpBrowse.Visible = true;
+        } else { 
+          BmpBrowse.Visible = false;
+        }
         ColorAButton.BackColor = item.ColorA.AsColor();
         ColorBButton.BackColor = item.ColorB.AsColor();
         AngleATrackBar.Value = item.AngleA;
@@ -325,6 +330,7 @@ namespace SlideSketch {
           _itemCaster.SaveItem(_inEditItem);
         } finally {
           //SetInProgress(0);
+          ResetPropEditors(_inEditItem);
         }
       }
     }
@@ -435,7 +441,8 @@ namespace SlideSketch {
     private void timerDraw_Tick(object sender, EventArgs e) {
       timerDraw.Enabled = false;
       try {
-        DrawTreeOnPictureBox();
+        var g = splitContainer4.Panel1.CreateGraphics();
+        DrawTreeOnPictureBox(g);
       } finally {
         timerDraw.Enabled = _drawTimerRunning;
       }
@@ -461,13 +468,12 @@ namespace SlideSketch {
       }
       return null;
     }
-    private void DrawTreeOnPictureBox() {
+    private void DrawTreeOnPictureBox(Graphics graphics) {
       Item? frame = this.FindFrameNode();
-      if (frame == null) return;
-
-      Graphics graphics = splitContainer4.Panel1.CreateGraphics();
+      if (frame == null) return;      
       BufferedGraphics bg = BufferedGraphicsManager.Current.Allocate(graphics, splitContainer4.Panel1.DisplayRectangle);
       SurfaceProps surface = new SurfaceProps() {
+        BitmapCache = _bitmapCache,
         ContainerWidth = splitContainer4.Panel1.Width,
         ContainerHeight = splitContainer4.Panel1.Height,
         ContainerAspectRatio = cbAspectRatio.SelectedItem.AsString().GetAspectRatio(),
@@ -497,7 +503,7 @@ namespace SlideSketch {
         foreach (var element in frame.Nodes) {
           Item? elementItem = element as Item;
           if (elementItem != null) {
-            elementItem.DrawElement(surface, _bitmapCache);
+            elementItem.DrawElement(surface);
           }
         }
 
@@ -507,6 +513,7 @@ namespace SlideSketch {
       } finally {
         bg.Dispose();
         graphics.Dispose();
+        _bitmapCache.CleanupBitmapCache();
       }
     }
     private void Slider_MouseEnter(object sender, EventArgs e) {
@@ -525,14 +532,55 @@ namespace SlideSketch {
     }
 
     private void pasteItemToolStripMenuItem_Click(object sender, EventArgs e) {
-      if (_copiedItem != null && treeView1.SelectedNode is Item selectedItem) {     
-        _itemCaster.CopyItemTo( selectedItem, _copiedItem);
+      if (_copiedItem != null && treeView1.SelectedNode is Item selectedItem) {
+        _itemCaster.CopyItemTo(selectedItem, _copiedItem);
         LogMsg($"Item '{_copiedItem.Name}' pasted under '{selectedItem.Name}'.");
       }
     }
 
     private void takeSnapshotToolStripMenuItem_Click(object sender, EventArgs e) {
+      // Find the Frame node
+      Item? frameNode = FindFrameNode();
+      if (frameNode == null) {
+        MessageBox.Show("Frame node not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+      }
 
+      // Get the dimensions from the Frame node
+      decimal designSize = frameNode.Width / (100).AsDecimal();
+      decimal frameWidth = (splitContainer4.Panel1.Width * designSize);
+      decimal ContainerAspectRatio = cbAspectRatio.SelectedItem.AsString().GetAspectRatio();
+      decimal frameHeight = (frameWidth * ContainerAspectRatio);      
+      int width = frameWidth.AsInt();
+      int height = frameHeight.AsInt();
+
+      // Create a bitmap with the dimensions of the Frame node
+      using (Bitmap bitmap = new Bitmap(width, height)) {
+        using (Graphics g = Graphics.FromImage(bitmap)) {        
+          DrawTreeOnPictureBox(g);
+        }
+
+        // Save the bitmap to a file
+        using (SaveFileDialog saveFileDialog = new SaveFileDialog()) {
+          saveFileDialog.Filter = "Bitmap Image|*.bmp";
+          saveFileDialog.Title = "Save Snapshot";
+          if (saveFileDialog.ShowDialog() == DialogResult.OK) {
+            bitmap.Save(saveFileDialog.FileName);
+            MessageBox.Show("Snapshot saved successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+          }
+        }
+      }
+    }
+
+    private void Form1_FormClosed(object sender, FormClosedEventArgs e) {
+      _bitmapCache.Dispose();
+    }
+
+    private void BmpBrowse_Click(object sender, EventArgs e) {
+      openBmpDialog.FileName = edCaption.Text;
+      if (openBmpDialog.ShowDialog() == DialogResult.OK) {
+        edCaption.Text = openBmpDialog.FileName;
+      }
     }
   }
 }

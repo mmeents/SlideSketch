@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace SlideSketch.Models {
   public class SurfaceProps {
+    public BitmapCache BitmapCache { get; set; }
     public int ContainerWidth { get; set; } = 0;
     public int ContainerHeight { get; set; } = 0;
     public decimal ContainerAspectRatio { get; set; } = 1;

@@ -56,7 +56,7 @@ namespace SlideSketch.Models {
       return new Font(FontName, FontSize, thisFontStyle);
     }
     
-public static int DrawElement(this Item node, SurfaceProps props, ConcurrentDictionary<string, Bitmap> bitmapCache) {
+public static int DrawElement(this Item node, SurfaceProps props) {
       if (node == null || node.TypeId < 2 || props?.bg == null) return 0;
 
       props.ItemBrushA = new SolidBrush(node.ColorA.AsColor());
@@ -95,13 +95,13 @@ public static int DrawElement(this Item node, SurfaceProps props, ConcurrentDict
           node.FloodFill(props);
           break;
         case (int)ItemTypeEnum.Bitmap: // New case for Bitmap
-          node.DrawBitmap(props, bitmapCache);
+          node.DrawBitmap(props);
           break;
       }
       foreach (var child in node.Nodes) {
         Item? childItem = child as Item;
         if (childItem != null) {
-          childItem.DrawElement(props, bitmapCache);
+          childItem.DrawElement(props);
         }
       }
 
@@ -216,18 +216,21 @@ public static int DrawElement(this Item node, SurfaceProps props, ConcurrentDict
       }
       return bitmap;
     }
-    public static void DrawBitmap(this Item node, SurfaceProps props, ConcurrentDictionary<string, Bitmap> bitmapCache) {
+    public static void DrawBitmap(this Item node, SurfaceProps props) {
       if (props == null || node == null || props.bg == null) return;
 
       // Assuming node.Caption contains the path to the bitmap file
       string bitmapPath = node.Caption;
       if (string.IsNullOrEmpty(bitmapPath)) return;
 
-      Bitmap bitmap;
-      if (!bitmapCache.TryGetValue(bitmapPath, out bitmap)) {
+      BitmapCacheEntry cachedBitmap;
+      if (!props.BitmapCache.TryGetValue(bitmapPath, out cachedBitmap)) {
         if (!System.IO.File.Exists(bitmapPath)) return;
-        bitmap = new Bitmap(bitmapPath);
-        bitmapCache[bitmapPath] = bitmap;
+        var bitmap = new Bitmap(bitmapPath);
+        cachedBitmap = new BitmapCacheEntry(bitmap);
+        props.BitmapCache[bitmapPath] = cachedBitmap;
+      } else {
+        props.BitmapCache.IncrementReferenceCount(bitmapPath);        
       }
 
       float left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat()) / 100);
@@ -235,7 +238,7 @@ public static int DrawElement(this Item node, SurfaceProps props, ConcurrentDict
       float width = (props.ContainerWidth.AsFloat() * node.Width.AsFloat()) / 100;
       float height = (props.ContainerHeight.AsFloat() * node.Height.AsFloat()) / 100;
 
-      props.bg.Graphics.DrawImage(bitmap, left, top, width, height);    
+      props.bg.Graphics.DrawImage(cachedBitmap.Bitmap, left, top, width, height);    
     }
 
   }
