@@ -6,16 +6,16 @@ namespace SlideSketch.Models {
   public class Item : TreeNode {
     private int _TypeId = 0;
     private int _ItemRank = 0;
-    private int _Left = 0;
-    private int _Top = 0;
-    private int _Width = 0;
-    private int _Height = 0;
+    private int _Left = 10;
+    private int _Top = 10;
+    private int _Width = 80;
+    private int _Height = 80;
     private int _AngleA = 0;
-    private int _AngleB = 0;
-    private int _Weight = 0;
+    private int _AngleB = 100;
+    private int _Weight = 2;
 
-    private string _ColorA = "";
-    private string _ColorB = "";
+    private string _ColorA = "White";
+    private string _ColorB = "White";
     private string _Font = "";
     private string _Caption = "";
 

@@ -15,6 +15,23 @@ SlideSketch is an innovative drawing app that organizes elements in a tree struc
 - **Buffered Graphics**: Enjoy smooth and flicker-free drawing experiences.
 - **Timer-Driven Rendering**: Experience real-time updates and interactions.
 - **Expandable Element Types**: Easily add and refine element types and controls.
+- **Add and edit text, images, and shapes**
+- **Rotate and resize**: Image elements including opacity. 
+- **Drag and Drop**: elements in tree to control z-order and organization
+- **Copy and Paste**: elements in the tree to duplicate branches
+- **Save and load**: presentations as files.
+- **Export**: presentations as images.
+- **Elements**: 
+    - **Text**: editable text elements
+    - **Image**: image elements
+    - **Rectangle**: rectangle elements
+    - **Ellipse**: ellipse elements
+    - **Line**: line elements
+    - **Arc**: curve elements
+    - **LineTo**: line from the parent element to the current element
+    - **BezierTo**: curve from the parent element to the current element
+    - more to come...
+
 
 ## Getting Started
 

@@ -59,6 +59,10 @@
       label1 = new Label();
       tbHeight = new TrackBar();
       tbTop = new TrackBar();
+      label12 = new Label();
+      label11 = new Label();
+      textBack = new TextBox();
+      textFore = new TextBox();
       BmpBrowse = new Button();
       btnFont = new Button();
       label10 = new Label();
@@ -279,6 +283,10 @@
       // 
       // splitContainer2.Panel2
       // 
+      splitContainer2.Panel2.Controls.Add(label12);
+      splitContainer2.Panel2.Controls.Add(label11);
+      splitContainer2.Panel2.Controls.Add(textBack);
+      splitContainer2.Panel2.Controls.Add(textFore);
       splitContainer2.Panel2.Controls.Add(BmpBrowse);
       splitContainer2.Panel2.Controls.Add(btnFont);
       splitContainer2.Panel2.Controls.Add(label10);
@@ -317,6 +325,7 @@
       // 
       // treeView1
       // 
+      treeView1.AllowDrop = true;
       treeView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
       treeView1.ContextMenuStrip = MenuTree;
       treeView1.ImageIndex = 0;
@@ -329,7 +338,11 @@
       treeView1.TabIndex = 0;
       treeView1.AfterLabelEdit += treeView1_AfterLabelEdit;
       treeView1.BeforeExpand += treeView1_BeforeExpand;
+      treeView1.ItemDrag += treeView1_ItemDrag;
       treeView1.AfterSelect += treeView1_AfterSelect;
+      treeView1.DragDrop += treeView1_DragDrop;
+      treeView1.DragEnter += treeView1_DragEnter;
+      treeView1.DragOver += treeView1_DragOver;
       treeView1.MouseEnter += Slider_MouseLeave;
       // 
       // MenuTree
@@ -483,6 +496,39 @@
       tbTop.Value = 10;
       tbTop.ValueChanged += tbTop_ValueChanged;
       // 
+      // label12
+      // 
+      label12.AutoSize = true;
+      label12.Location = new Point(5, 100);
+      label12.Name = "label12";
+      label12.Size = new Size(43, 20);
+      label12.TabIndex = 15;
+      label12.Text = "Back:";
+      // 
+      // label11
+      // 
+      label11.AutoSize = true;
+      label11.Location = new Point(5, 62);
+      label11.Name = "label11";
+      label11.Size = new Size(41, 20);
+      label11.TabIndex = 14;
+      label11.Text = "Fore:";
+      label11.Click += label11_Click;
+      // 
+      // textBack
+      // 
+      textBack.Location = new Point(53, 97);
+      textBack.Name = "textBack";
+      textBack.Size = new Size(85, 27);
+      textBack.TabIndex = 13;
+      // 
+      // textFore
+      // 
+      textFore.Location = new Point(53, 59);
+      textFore.Name = "textFore";
+      textFore.Size = new Size(85, 27);
+      textFore.TabIndex = 12;
+      // 
       // BmpBrowse
       // 
       BmpBrowse.Location = new Point(798, 102);
@@ -495,7 +541,7 @@
       // 
       // btnFont
       // 
-      btnFont.Location = new Point(136, 102);
+      btnFont.Location = new Point(202, 102);
       btnFont.Name = "btnFont";
       btnFont.Size = new Size(74, 27);
       btnFont.TabIndex = 10;
@@ -524,7 +570,7 @@
       // 
       // ColorBButton
       // 
-      ColorBButton.Location = new Point(122, 52);
+      ColorBButton.Location = new Point(143, 96);
       ColorBButton.Name = "ColorBButton";
       ColorBButton.Size = new Size(52, 37);
       ColorBButton.TabIndex = 7;
@@ -534,7 +580,7 @@
       // 
       // ColorAButton
       // 
-      ColorAButton.Location = new Point(64, 52);
+      ColorAButton.Location = new Point(143, 53);
       ColorAButton.Name = "ColorAButton";
       ColorAButton.Size = new Size(52, 37);
       ColorAButton.TabIndex = 6;
@@ -545,7 +591,7 @@
       // label9
       // 
       label9.AutoSize = true;
-      label9.Location = new Point(216, 105);
+      label9.Location = new Point(282, 105);
       label9.Name = "label9";
       label9.Size = new Size(61, 20);
       label9.TabIndex = 5;
@@ -553,9 +599,9 @@
       // 
       // edCaption
       // 
-      edCaption.Location = new Point(283, 102);
+      edCaption.Location = new Point(349, 102);
       edCaption.Name = "edCaption";
-      edCaption.Size = new Size(509, 27);
+      edCaption.Size = new Size(430, 27);
       edCaption.TabIndex = 4;
       edCaption.TextChanged += edCaption_TextChanged;
       // 
@@ -735,5 +781,9 @@
     private ToolStripMenuItem takeSnapshotToolStripMenuItem;
     private OpenFileDialog openBmpDialog;
     private Button BmpBrowse;
+    private TextBox textBack;
+    private TextBox textFore;
+    private Label label11;
+    private Label label12;
   }
 }

@@ -208,7 +208,8 @@ namespace SlideSketch {
 
     private void MenuAddElement_Click(object sender, EventArgs e) {
       if (_inEditItem != null) {
-        _ = _itemCaster.SaveNewChildItemsFromText(_inEditItem, _types[(int)ItemTypeEnum.Element], "Element");
+        var element = _itemCaster.SaveNewChildItemsFromText(_inEditItem, _types[(int)ItemTypeEnum.Element], "Element");
+        element.ColorA = "#000000";
       }
     }
 
@@ -310,11 +311,13 @@ namespace SlideSketch {
         }
         if (cbType.SelectedItem.AsString().Contains("Bitmap")) {
           BmpBrowse.Visible = true;
-        } else { 
+        } else {
           BmpBrowse.Visible = false;
         }
         ColorAButton.BackColor = item.ColorA.AsColor();
+        textFore.Text = item.ColorA.AsString();
         ColorBButton.BackColor = item.ColorB.AsColor();
+        textBack.Text = item.ColorB.AsString();
         AngleATrackBar.Value = item.AngleA;
         AngleBTrackBar.Value = item.AngleB;
         edCaption.Text = item.Caption;
@@ -348,6 +351,7 @@ namespace SlideSketch {
       if (_inEditItem == null) return;
       colorDialog1.Color = ColorAButton.BackColor;
       if (colorDialog1.ShowDialog() == DialogResult.OK) {
+        textFore.Text = colorDialog1.Color.AsString();
         ColorAButton.BackColor = colorDialog1.Color;
         _inEditItem.ColorA = ColorAButton.BackColor.AsString();
         SaveInEditChanges();
@@ -358,6 +362,7 @@ namespace SlideSketch {
       if (_inEditItem == null) return;
       colorDialog1.Color = ColorBButton.BackColor;
       if (colorDialog1.ShowDialog() == DialogResult.OK) {
+        textBack.Text = colorDialog1.Color.AsString();
         ColorBButton.BackColor = colorDialog1.Color;
         _inEditItem.ColorB = ColorBButton.BackColor.AsString();
         SaveInEditChanges();
@@ -470,7 +475,7 @@ namespace SlideSketch {
     }
     private void DrawTreeOnPictureBox(Graphics graphics) {
       Item? frame = this.FindFrameNode();
-      if (frame == null) return;      
+      if (frame == null) return;
       BufferedGraphics bg = BufferedGraphicsManager.Current.Allocate(graphics, splitContainer4.Panel1.DisplayRectangle);
       SurfaceProps surface = new SurfaceProps() {
         BitmapCache = _bitmapCache,
@@ -533,7 +538,12 @@ namespace SlideSketch {
 
     private void pasteItemToolStripMenuItem_Click(object sender, EventArgs e) {
       if (_copiedItem != null && treeView1.SelectedNode is Item selectedItem) {
-        _itemCaster.CopyItemTo(selectedItem, _copiedItem);
+        try {
+          _itemCaster.CopyItemTo(selectedItem, _copiedItem);
+        } catch (Exception ex) {
+          LogMsg($"Error pasting item: {ex.Message}");
+          MessageBox.Show($"Error pasting item: {ex.Message}");
+        }
         LogMsg($"Item '{_copiedItem.Name}' pasted under '{selectedItem.Name}'.");
       }
     }
@@ -550,13 +560,13 @@ namespace SlideSketch {
       decimal designSize = frameNode.Width / (100).AsDecimal();
       decimal frameWidth = (splitContainer4.Panel1.Width * designSize);
       decimal ContainerAspectRatio = cbAspectRatio.SelectedItem.AsString().GetAspectRatio();
-      decimal frameHeight = (frameWidth * ContainerAspectRatio);      
+      decimal frameHeight = (frameWidth * ContainerAspectRatio);
       int width = frameWidth.AsInt();
       int height = frameHeight.AsInt();
 
       // Create a bitmap with the dimensions of the Frame node
       using (Bitmap bitmap = new Bitmap(width, height)) {
-        using (Graphics g = Graphics.FromImage(bitmap)) {        
+        using (Graphics g = Graphics.FromImage(bitmap)) {
           DrawTreeOnPictureBox(g);
         }
 
@@ -580,6 +590,58 @@ namespace SlideSketch {
       openBmpDialog.FileName = edCaption.Text;
       if (openBmpDialog.ShowDialog() == DialogResult.OK) {
         edCaption.Text = openBmpDialog.FileName;
+      }
+    }
+
+    private void label11_Click(object sender, EventArgs e) {
+
+    }
+
+    private void treeView1_DragEnter(object sender, DragEventArgs e) {
+      e.Effect = DragDropEffects.Move;
+    }
+
+    private void treeView1_DragOver(object sender, DragEventArgs e) {
+      if (e.Data != null) {
+        Item sni = (Item)e.Data.GetData(typeof(Item));
+        if (sni != null) {
+          Point targetPt = treeView1.PointToClient(new Point(e.X, e.Y));
+          Item tn = (Item)treeView1.GetNodeAt(targetPt);
+          if (tn != sni) {
+            if (tn != null) {
+              e.Effect = DragDropEffects.Move;
+              if (!tn.IsExpanded) tn.Expand();
+            } else {
+              if ((sni.TypeId >= (int)ItemTypeEnum.Element) && (sni.TypeId <= 199)) {
+                e.Effect = DragDropEffects.Move;
+              } else {
+                e.Effect = DragDropEffects.None;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    private void treeView1_DragDrop(object sender, DragEventArgs e) {
+      try {
+        Point targetPt = treeView1.PointToClient(new Point(e.X, e.Y));
+        Item tn = (Item)treeView1.GetNodeAt(targetPt);
+
+        if (tn != null && e.Data != null) {
+          Item dragNode = (Item)e.Data.GetData(typeof(Item));
+          if (dragNode != null) {
+            var fnn = _itemCaster.MoveItemSave(tn, dragNode);
+          }
+        }
+
+      } finally {
+      }
+    }
+
+    private void treeView1_ItemDrag(object sender, ItemDragEventArgs e) {
+      if (e.Button == MouseButtons.Left) {
+        DoDragDrop(e.Item, DragDropEffects.Move);
       }
     }
   }

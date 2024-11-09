@@ -97,6 +97,12 @@ public static int DrawElement(this Item node, SurfaceProps props) {
         case (int)ItemTypeEnum.Bitmap: // New case for Bitmap
           node.DrawBitmap(props);
           break;
+        case (int)ItemTypeEnum.LineTo:
+          node.DrawLineTo(props);
+          break;
+        case (int)ItemTypeEnum.BezierTo:
+          node.DrawBezierTo(props);
+          break;
       }
       foreach (var child in node.Nodes) {
         Item? childItem = child as Item;
@@ -230,15 +236,73 @@ public static int DrawElement(this Item node, SurfaceProps props) {
         cachedBitmap = new BitmapCacheEntry(bitmap);
         props.BitmapCache[bitmapPath] = cachedBitmap;
       } else {
-        props.BitmapCache.IncrementReferenceCount(bitmapPath);        
+        props.BitmapCache.IncrementReferenceCount(bitmapPath);
       }
 
       float left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat()) / 100);
       float top = ((props.ContainerHeight.AsFloat() * node.Top.AsFloat()) / 100);
       float width = (props.ContainerWidth.AsFloat() * node.Width.AsFloat()) / 100;
       float height = (props.ContainerHeight.AsFloat() * node.Height.AsFloat()) / 100;
+      float angle = node.AngleA.AsFloat() * 360 / 100;
+      float opacity = node.AngleB.AsFloat() / 100; // Convert AngleB to opacity (0 to 1)
 
-      props.bg.Graphics.DrawImage(cachedBitmap.Bitmap, left, top, width, height);    
+      // Save the current state of the graphics context
+      var state = props.bg.Graphics.Save();
+
+      // Translate the graphics context to the top-left corner of the bitmap
+      props.bg.Graphics.TranslateTransform(left, top);
+
+      // Rotate the graphics context around the center of the bitmap
+      props.bg.Graphics.TranslateTransform(width / 2, height / 2);
+      props.bg.Graphics.RotateTransform(angle);
+      props.bg.Graphics.TranslateTransform(-width / 2, -height / 2);
+
+      // Set the opacity
+      ColorMatrix matrix = new ColorMatrix();
+      matrix.Matrix33 = opacity;
+      ImageAttributes attributes = new ImageAttributes();
+      attributes.SetColorMatrix(matrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+      // Draw the bitmap at the new origin with the specified opacity
+      props.bg.Graphics.DrawImage(cachedBitmap.Bitmap, new Rectangle(0, 0, width.AsInt(), height.AsInt()), 0, 0, cachedBitmap.Bitmap.Width, cachedBitmap.Bitmap.Height, GraphicsUnit.Pixel, attributes);
+
+      // Restore the graphics context to its original state
+      props.bg.Graphics.Restore(state);
+    }
+
+    public static void DrawLineTo(this Item node, SurfaceProps props) {
+      if (props == null || node == null || props.bg == null) return;
+
+      Pen pen = new Pen(props.ItemBrushA, node.Weight);
+      Item? parentNode = node.Parent as Item;
+      if (parentNode == null) return;
+
+      float startX = (props.ContainerWidth * parentNode.Left) / 100;
+      float startY = (props.ContainerHeight * parentNode.Top) / 100;
+      float endX = (props.ContainerWidth * node.Left) / 100;
+      float endY = (props.ContainerHeight * node.Top) / 100;
+
+      props.bg.Graphics.DrawLine(pen, startX, startY, endX, endY);      
+    }
+
+    public static void DrawBezierTo(this Item node, SurfaceProps props) {
+      if (props == null || node == null || props.bg == null) return;
+
+      Pen pen = new Pen(props.ItemBrushA, node.Weight);
+      Item? parentNode = node.Parent as Item;
+      if (parentNode == null) return;
+
+      float startX = (props.ContainerWidth * parentNode.Left) / 100;
+      float startY = (props.ContainerHeight * parentNode.Top) / 100;
+      float endX = (props.ContainerWidth * node.Left) / 100;
+      float endY = (props.ContainerHeight * node.Top) / 100;
+
+      float control1X = startX + (props.ContainerWidth * node.Width) / 100;
+      float control1Y = startY + (props.ContainerHeight * node.Height) / 100;
+      float control2X = endX + (props.ContainerWidth * node.AngleA) / 100;
+      float control2Y = endY + (props.ContainerHeight * node.AngleB) / 100;
+
+      props.bg.Graphics.DrawBezier(pen, startX, startY, control1X, control1Y, control2X, control2Y, endX, endY);
     }
 
   }

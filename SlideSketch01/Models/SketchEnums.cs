@@ -15,6 +15,8 @@ namespace SlideSketch.Models {
     Line = 6,
     FloodFill = 7,
     Bitmap = 8,
+    LineTo = 9,
+    BezierTo = 10,
   }
 
   public enum ImageIndexEnum {
