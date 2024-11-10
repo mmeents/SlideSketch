@@ -149,7 +149,7 @@ public static int DrawElement(this Item node, SurfaceProps props) {
       props.bg.Graphics.DrawLine(pen, startX, startY, endX, endY);
     }
 
-    public static void FloodFill(this Item node, SurfaceProps props) {
+    public static void FloodFillOld(this Item node, SurfaceProps props) {
       if (node == null || props?.bg == null) return;
       var colorA = node.ColorA.AsColor().ToArgb();
       var colorB = node.ColorB.AsColor().ToArgb();
@@ -305,6 +305,79 @@ public static int DrawElement(this Item node, SurfaceProps props) {
       props.bg.Graphics.DrawBezier(pen, startX, startY, control1X, control1Y, control2X, control2Y, endX, endY);
     }
 
+
+    public static void FloodFill(this Item node, SurfaceProps props) {
+      if (node == null || props?.bg == null) return;
+      var colorA = node.ColorA.AsColor().ToArgb();
+      var colorB = node.ColorB.AsColor().ToArgb();
+      int left = ((props.ContainerWidth.AsFloat() * node.Left.AsFloat()) / 100).AsInt();
+      int top = ((props.ContainerHeight.AsFloat() * node.Top.AsFloat()) / 100).AsInt();
+      int tolerance = ((369 * node.AngleB.AsFloat()) / 100).AsInt();
+
+      var bmp = props.ToBitmap();
+
+      int targetColor = bmp.GetPixel(left, top).ToArgb();
+      if (targetColor == colorB)
+        return;
+
+      Queue<Point> pixels = new Queue<Point>();
+      pixels.Enqueue(new Point(left, top));
+
+      // Lock bitmap data
+      BitmapData data = bmp.LockBits(
+          new Rectangle(0, 0, bmp.Width, bmp.Height),
+          ImageLockMode.ReadWrite,
+          PixelFormat.Format32bppArgb);
+
+      int bytesPerPixel = 4;  // 32 bits per pixel (ARGB format)
+      int heightInPixels = data.Height;
+      int widthInBytes = data.Width * bytesPerPixel;
+      byte[] pixelBuffer = new byte[data.Stride * heightInPixels];
+      Marshal.Copy(data.Scan0, pixelBuffer, 0, pixelBuffer.Length);
+
+      while (pixels.Count > 0) {
+        Point point = pixels.Dequeue();
+        int pixelIndex = (point.Y * data.Stride) + (point.X * bytesPerPixel);
+
+        // Bounds check
+        if (point.X < 0 || point.X >= data.Width || point.Y < 0 || point.Y >= heightInPixels)
+          continue;
+
+        // Check if the current pixel color is within the tolerance range
+        int currentPixelColorArgb = BitConverter.ToInt32(pixelBuffer, pixelIndex);
+        if (!IsColorWithinTolerance(currentPixelColorArgb, targetColor, tolerance) 
+            || currentPixelColorArgb == colorA || currentPixelColorArgb == colorB)
+          continue;
+
+        // Set pixel to fill color
+        byte[] fillColorBytes = BitConverter.GetBytes(colorB);
+        Buffer.BlockCopy(fillColorBytes, 0, pixelBuffer, pixelIndex, bytesPerPixel);
+
+        // Enqueue neighboring pixels
+        pixels.Enqueue(new Point(point.X - 1, point.Y));
+        pixels.Enqueue(new Point(point.X + 1, point.Y));
+        pixels.Enqueue(new Point(point.X, point.Y - 1));
+        pixels.Enqueue(new Point(point.X, point.Y + 1));
+      }
+
+      // Copy modified pixel data back to the bitmap
+      Marshal.Copy(pixelBuffer, 0, data.Scan0, pixelBuffer.Length);
+      bmp.UnlockBits(data);
+
+      props.bg.Graphics.DrawImage(bmp, 0, 0);
+    }
+
+    private static bool IsColorWithinTolerance(int color1, int color2, int tolerance) {
+      Color c1 = Color.FromArgb(color1);
+      Color c2 = Color.FromArgb(color2);
+
+      int rDiff = c1.R - c2.R;
+      int gDiff = c1.G - c2.G;
+      int bDiff = c1.B - c2.B;
+
+      int distance = (int)Math.Sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
+      return distance <= tolerance;
+    }
   }
 
  

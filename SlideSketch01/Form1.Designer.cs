@@ -82,6 +82,7 @@
       fontDialog1 = new FontDialog();
       timerDraw = new System.Windows.Forms.Timer(components);
       openBmpDialog = new OpenFileDialog();
+      button1 = new Button();
       TabCtrlRoot.SuspendLayout();
       SetupTab.SuspendLayout();
       DesignTab.SuspendLayout();
@@ -187,6 +188,7 @@
       // 
       // splitContainer1.Panel1
       // 
+      splitContainer1.Panel1.Controls.Add(button1);
       splitContainer1.Panel1.Controls.Add(label7);
       splitContainer1.Panel1.Controls.Add(label6);
       splitContainer1.Panel1.Controls.Add(label5);
@@ -233,7 +235,7 @@
       // label4
       // 
       label4.AutoSize = true;
-      label4.Location = new Point(15, 12);
+      label4.Location = new Point(101, 13);
       label4.Name = "label4";
       label4.Size = new Size(50, 20);
       label4.TabIndex = 3;
@@ -521,6 +523,7 @@
       textBack.Name = "textBack";
       textBack.Size = new Size(85, 27);
       textBack.TabIndex = 13;
+      textBack.TextChanged += textBack_TextChanged;
       // 
       // textFore
       // 
@@ -528,6 +531,7 @@
       textFore.Name = "textFore";
       textFore.Size = new Size(85, 27);
       textFore.TabIndex = 12;
+      textFore.TextChanged += textFore_TextChanged;
       // 
       // BmpBrowse
       // 
@@ -671,7 +675,7 @@
       // 
       // timerDraw
       // 
-      timerDraw.Interval = 333;
+      timerDraw.Interval = 250;
       timerDraw.Tick += timerDraw_Tick;
       // 
       // openBmpDialog
@@ -680,6 +684,16 @@
       openBmpDialog.FileName = "openFileDialog2";
       openBmpDialog.Filter = "Image Files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.tiff|All Files|*.*";
       openBmpDialog.Title = "Select an Image File";
+      // 
+      // button1
+      // 
+      button1.Location = new Point(5, 10);
+      button1.Name = "button1";
+      button1.Size = new Size(90, 27);
+      button1.TabIndex = 11;
+      button1.Text = "Expand All";
+      button1.UseVisualStyleBackColor = true;
+      button1.Click += button1_Click;
       // 
       // Form1
       // 
@@ -785,5 +799,6 @@
     private TextBox textFore;
     private Label label11;
     private Label label12;
+    private Button button1;
   }
 }

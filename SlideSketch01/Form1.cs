@@ -2,6 +2,7 @@
 using SlideSketch.Models;
 using System.Collections.Concurrent;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace SlideSketch {
@@ -21,6 +22,8 @@ namespace SlideSketch {
     private string _folder;
     private bool _drawTimerRunning = false;
     private Item? _copiedItem;
+    private int _flashCounter = 0;
+    private bool _flashLine = false;
     public bool DrawTimerRunning {
       get { return _drawTimerRunning; }
       set {
@@ -323,6 +326,8 @@ namespace SlideSketch {
         edCaption.Text = item.Caption;
         btnFont.Font = item.Font;
         _inReset = false;
+        _flashLine = true;
+        _flashCounter = 0;
       }
     }
 
@@ -373,12 +378,16 @@ namespace SlideSketch {
       if (_inEditItem == null || _inReset) return;
       _inEditItem.Left = tbLeft.Value;
       SaveInEditChanges();
+      _flashLine = true;
+      _flashCounter = 0;
     }
 
     private void tbTop_ValueChanged(object sender, EventArgs e) {
       if (_inEditItem == null || _inReset) return;
       _inEditItem.Top = 100 - tbTop.Value;
       SaveInEditChanges();
+      _flashLine = true;
+      _flashCounter = 0;
     }
 
     private void tbHeight_ValueChanged(object sender, EventArgs e) {
@@ -509,6 +518,24 @@ namespace SlideSketch {
           Item? elementItem = element as Item;
           if (elementItem != null) {
             elementItem.DrawElement(surface);
+          }
+        }
+
+        if (_flashLine && _flashCounter < 8 && _inEditItem != null) {
+
+          // Get the current values of Left and Top          
+          int left = ((_inEditItem.Left * surface.ContainerWidth) / 100).AsInt();
+          int top = ((_inEditItem.Top * surface.ContainerHeight) / 100).AsInt();
+
+          // Draw the flashing line
+          using (Pen pen = new Pen(Color.Red, 1)) {
+            bg.Graphics.DrawLine(pen, left - 5, top, left + 10, top); // Horizontal line
+            bg.Graphics.DrawLine(pen, left, top - 5, left, top + 10); // Vertical line
+          }
+
+          _flashCounter++;
+          if (_flashCounter >= 8) {
+            _flashLine = false;
           }
         }
 
@@ -643,6 +670,42 @@ namespace SlideSketch {
       if (e.Button == MouseButtons.Left) {
         DoDragDrop(e.Item, DragDropEffects.Move);
       }
+    }
+
+    private void textFore_TextChanged(object sender, EventArgs e) {
+      if (_inEditItem != null) {
+        try {
+          // Parse the color from the text box
+          var color = ColorTranslator.FromHtml(textFore.Text);
+          _inEditItem.ColorA = ColorTranslator.ToHtml(color);
+
+          // Optionally, update the UI or other related properties
+          ColorAButton.BackColor = color;
+        } catch (Exception ex) {
+          // Handle invalid color format
+          LogMsg($"Invalid color format: {ex.Message}");
+        }
+      }
+    }
+
+    private void textBack_TextChanged(object sender, EventArgs e) {
+      if (_inEditItem != null) {
+        try {
+          // Parse the color from the text box
+          var color = ColorTranslator.FromHtml(textBack.Text);
+          _inEditItem.ColorB = ColorTranslator.ToHtml(color);
+
+          // Optionally, update the UI or other related properties
+          ColorBButton.BackColor = color;
+        } catch (Exception ex) {
+          // Handle invalid color format
+          LogMsg($"Invalid color format: {ex.Message}");
+        }
+      }
+    }
+
+    private void button1_Click(object sender, EventArgs e) {
+      treeView1.ExpandAll();
     }
   }
 }

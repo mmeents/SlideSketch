@@ -21,6 +21,8 @@ SlideSketch is an innovative drawing app that organizes elements in a tree struc
 - **Copy and Paste**: elements in the tree to duplicate branches
 - **Save and load**: presentations as files.
 - **Export**: presentations as images.
+- **Flashes Location**: of selected elements in the tree 2 seconds.  
+- **Draw per second**: of the rendering loop set at 4, or 250ms.
 - **Elements**: 
     - **Text**: editable text elements
     - **Image**: image elements
@@ -29,7 +31,7 @@ SlideSketch is an innovative drawing app that organizes elements in a tree struc
     - **Line**: line elements
     - **Arc**: curve elements
     - **LineTo**: line from the parent element to the current element
-    - **BezierTo**: curve from the parent element to the current element
+    - **BezierTo**: curve from the parent element to the current element    
     - more to come...
 
 
